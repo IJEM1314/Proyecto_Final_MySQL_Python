@@ -11,10 +11,22 @@ class Unidad:
     def crear(cls, tipo, placas, chofer_id):
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute("""INSERT INTO unidades (tipo, placas, chofer_id)VALUES (%s, %s, %s)""", 
-            (tipo, placas, chofer_id))
+        cur.execute(
+            "INSERT INTO unidades (tipo, placas, chofer_id) VALUES (%s, %s, %s)",
+            (tipo, placas, chofer_id)
+        )
         conn.commit()
         uid = cur.lastrowid
         cur.close()
         conn.close()
         return cls(uid, tipo, placas, chofer_id)
+
+    @classmethod
+    def listar(cls):
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT id, tipo, placas, chofer_id FROM unidades")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [cls(*r) for r in rows]

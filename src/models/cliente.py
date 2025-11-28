@@ -12,13 +12,15 @@ class Cliente:
     def crear(cls, nombre, codigo_cliente, direccion):
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute("""INSERT INTO clientes (nombre, codigo_cliente, direccion) VALUES (%s, %s, %s)""",
-            (nombre, codigo_cliente, direccion))
+        cur.execute(
+            "INSERT INTO clientes (nombre, codigo_cliente, direccion) VALUES (%s, %s, %s)",
+            (nombre, codigo_cliente, direccion)
+        )
         conn.commit()
         cid = cur.lastrowid
         cur.close()
         conn.close()
-        Bitacora.registrar(None, "CREAR_CLIENTE", f"Cliente creado: {nombre}")
+        Bitacora.registrar(None, "CREAR_CLIENTE", f"Cliente: {nombre}")
         return cls(cid, nombre, codigo_cliente, direccion)
 
     @classmethod

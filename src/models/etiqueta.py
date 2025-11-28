@@ -10,10 +10,21 @@ class Etiqueta:
     def crear(cls, nombre, color):
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute("""INSERT INTO etiquetas (nombre, color) VALUES (%s, %s)""",
-            (nombre, color))
+        cur.execute("INSERT INTO etiquetas (nombre, color) VALUES (%s, %s)",
+            (nombre, color)
+        )
         conn.commit()
         eid = cur.lastrowid
         cur.close()
         conn.close()
         return cls(eid, nombre, color)
+
+    @classmethod
+    def listar(cls):
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT id, nombre, color FROM etiquetas")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [cls(*r) for r in rows]

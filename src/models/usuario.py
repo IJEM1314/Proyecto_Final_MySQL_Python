@@ -18,31 +18,18 @@ class Usuario:
     @classmethod
     def crear(cls, nombre, correo, role, departamento, password):
         password_hash = cls.hash_password(password)
-
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute("""INSERT INTO usuarios (nombre, correo, role, departamento, password_hash) VALUES (%s, %s, %s, %s, %s)""",
-            (nombre, correo, role, departamento, password_hash))
+        cur.execute(
+            "INSERT INTO usuarios (nombre, correo, role, departamento, password_hash) VALUES (%s, %s, %s, %s, %s)",
+            (nombre, correo, role, departamento, password_hash)
+        )
         conn.commit()
-
         uid = cur.lastrowid
         cur.close()
         conn.close()
-
         Bitacora.registrar(uid, "CREAR_USUARIO", f"Usuario creado: {nombre}")
-
         return cls(uid, nombre, correo, role, departamento, password_hash)
-
-    @classmethod
-    def buscar_por_id(cls, user_id):
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("""SELECT id, nombre, correo, role, departamento, password_hash FROM usuarios WHERE id=%s""",
-            (user_id,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        return cls(*row) if row else None
 
     @classmethod
     def listar(cls):
@@ -54,6 +41,26 @@ class Usuario:
         conn.close()
         return [cls(*r) for r in rows]
 
+    @classmethod
+    def buscar_por_id(cls, user_id):
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT id, nombre, correo, role, departamento, password_hash FROM usuarios WHERE id=%s",
+                    (user_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return cls(*row) if row else None
+
+    @classmethod
+    def login(cls, nombre, password):
+        hashed = cls.hash_password(password)
+        for u in cls.listar():
+            if u.nombre == nombre and u.password_hash == hashed:
+                Bitacora.registrar(u.id, "LOGIN", "Inicio de sesión")
+                return u
+        return None
+
     def eliminar(self):
         conn = get_conn()
         cur = conn.cursor()
@@ -61,18 +68,4 @@ class Usuario:
         conn.commit()
         cur.close()
         conn.close()
-
         Bitacora.registrar(self.id, "ELIMINAR_USUARIO", f"Usuario eliminado: {self.nombre}")
-
-    @classmethod
-    def login(cls, nombre, password):
-        usuarios = cls.listar()
-        hashed = cls.hash_password(password)
-
-        for u in usuarios:
-            if u.nombre == nombre and u.password_hash == hashed:
-                Bitacora.registrar(u.id, "LOGIN", "Inicio de sesión exitoso")
-                return u
-
-        return None
-
